@@ -1,3 +1,5 @@
+import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, name2Desc} from "./utils.js";
+
 export default function*(){
     let xp = 0;
     let armory = ["plate", "robe"];
@@ -17,17 +19,17 @@ export default function*(){
         
         while(true){
             let enemy = {...orc, effects:[]};
-            yield [enemy.name + "がおそってきた！", "たたかう"];
+            yield [enemy.label + "がおそってきた！", "たたかう"];
             
             while(true){
                 pl.effects = pl.effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
                 
-                let cmd = yield [`たいりょく：${pl.hp}/${maxHp(pl)}\nじゅついりょく：${multiplier(pl.effects, "spell") * 100}%\nてき：${enemy.name}`, ...pl.skills];
+                let cmd = yield [`たいりょく：${pl.hp}/${maxHp(pl)}\nじゅついりょく：${multiplier(pl.effects, "spell") * 100}%\nてき：${enemy.label}`, ...pl.skills];
                 const act = pl.skills[cmd - 1];
                 if(act === "なぐる"){
                     const dmg = attack(...pl.attack, pl.blows);
                     enemy.hp -= dmg;
-                    yield [`ぽかっすかっ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.name + "はうごかなくなった！"}`, "つづける"];
+                    yield [`ぽかっすかっ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
                 }else if(act === "かいふく"){
                     const rst = round(rnd(3, 8) * multiplier(pl.effects, "spell"));
                     pl.hp = Math.min(maxHp(pl), pl.hp + rst);
@@ -37,7 +39,7 @@ export default function*(){
                     const dmg = round(6 * multiplier(pl.effects, "spell"));
                     enemy.hp -= dmg;
                     pl.effects.push({type: "spell", amount: -0.25, duration: 4});
-                    yield [`ニンポをつかうぞ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.name + "はうごかなくなった！"}`, "つづける"];
+                    yield [`ニンポをつかうぞ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
                 }else if(act === "ぼうぎょ"){
                     pl.effects.push({type: "dodge", amount: 0.5, duration: 2});
                     yield ["みがまえて こうげきをかわしやすくなった！", "つづける"];
@@ -80,45 +82,8 @@ export default function*(){
     }
 }
 
-const round = n => Math.random() < (n - Math.floor(n)) ? Math.ceil(n) : Math.floor(n);
-
-const rnd = (min, max) => Math.floor(Math.random() * (max + 1 - min)) + min;
-
-const attack = (min, max, blows) => Array(blows).fill(0).map(_ => rnd(min, max)).reduce((a, b) => a + b);
-
-const pickRnd = arr => arr[Math.random() * arr.length | 0];
-
-const sum = (effects, type, ceil) => {
-    const subtotal = effects.filter(e => e.type === type).map(e => e.amount).reduce((a, b) => a + b, 0);
-    return ceil === undefined ? subtotal : Math.min(ceil, subtotal);
-}
-const multiplier = (effects, type, ceil) => sum(effects, type, ceil) + 1;
-
-const maxHp = pl => Math.ceil(pl.maxHp * multiplier(pl.effects, "hp"));
-
 const orc = {
-    name: "くさそうなオーク",
+    label: "くさそうなオーク",
     hp: 12,
     damage: [6, 3, 2, 2]
 };
-
-const xpTable = [0, 1, 2, 4, 6, 10, 12, 14, 15];
-const lvTable = [0, 3, 10, 20, 38];
-const level = xp => lvTable.filter(req => req <= xp).length;
-
-const gears = [
-    {name: "leather", label: "かわよろい", effect: {type: "dodge", amount: 0.1}},
-    {name: "plate", label: "むねあて", effect: {type: "hp", amount: 0.2}},
-    {name: "robe", label: "ローブ", effect: {type: "spell", amount: 0.25}}
-];
-
-const gearEffect = name => ({...gears.find(g => g.name === name).effect, duration: Infinity});
-const gearEffects = names => names.map(gearEffect);
-
-const name2Label = name => gears.find(g => g.name === name).label;
-const name2Effect = name => {
-    const dict = new Map([["hp", "たいりょく"], ["dodge", "かいひ"], ["spell", "じゅついりょく"]]);
-    const e = gears.find(g => g.name === name).effect;
-    return dict.get(e.type) + (e.amount >= 0 ? "+" : "-") + (e.amount * 100) + "%";
-};
-const name2Desc = name => name2Label(name) + " " + name2Effect(name);
