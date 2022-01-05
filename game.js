@@ -1,4 +1,5 @@
-import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, name2Desc} from "./utils.js";
+import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, name2Desc, wear, stats} from "./utils.js";
+import {orc} from "./creatures.js";
 
 export default function*(){
     let xp = 0;
@@ -8,8 +9,6 @@ export default function*(){
     while(true){
         let pl = {
             maxHp: level(xp) + 9,
-            blows: 2,
-            attack: [1, 4],
             effects: gearEffects(equipment),
             skills:["なぐる", "かいふく", "いなずま", "ぼうぎょ"]
         };
@@ -21,13 +20,13 @@ export default function*(){
             let enemy = {...orc, effects:[]};
             yield [enemy.label + "がおそってきた！", "たたかう"];
             
-            while(true){
-                pl.effects = pl.effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
+            while(pl.hp > 0){
+                pl.effects = wear(pl.effects);
                 
-                let cmd = yield [`たいりょく：${pl.hp}/${maxHp(pl)}\nじゅついりょく：${multiplier(pl.effects, "spell") * 100}%\nてき：${enemy.label}`, ...pl.skills];
+                let cmd = yield [stats(pl) + `\nてき：${enemy.label}`, ...pl.skills];
                 const act = pl.skills[cmd - 1];
                 if(act === "なぐる"){
-                    const dmg = attack(...pl.attack, pl.blows);
+                    const dmg = attack(1, 4, 2);
                     enemy.hp -= dmg;
                     yield [`ぽかっすかっ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
                 }else if(act === "かいふく"){
@@ -44,16 +43,15 @@ export default function*(){
                     pl.effects.push({type: "dodge", amount: 0.5, duration: 2});
                     yield ["みがまえて こうげきをかわしやすくなった！", "つづける"];
                 }
-                if(enemy.hp <= 0) break;
+                if(enemy.hp <= 0 || pl.hp <= 0) break;
                 
-                const dmg = pickRnd(enemy.damage);
                 if(Math.random() > sum(pl.effects, "dodge", 0.85)){
+                    const dmg = pickRnd(enemy.damage);
                     pl.hp -= dmg;
                     yield [`がすっ！${dmg}のダメージをうけた！${pl.hp > 0 ? "" : "やられてしまった！"}`, "つづける"];
                 }else{
                     yield [`ひらり！こうげきをかわした！`, "つづける"];
                 }
-                if(pl.hp <= 0) break;
             }
             
             if(pl.hp <= 0) return [`しんでしまった.. たおしたてき：${kills}`];
@@ -63,7 +61,7 @@ export default function*(){
             if(cmd === 2) break;
             
             pl.hp = Math.min(maxHp(pl), pl.hp + round(maxHp(pl) * 0.25));
-            pl.effects = pl.effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
+            pl.effects = wear(pl.effects);
         }
         
         const xpGained = xpTable[kills] || xpTable[xpTable.length - 1];
@@ -81,9 +79,3 @@ export default function*(){
         }
     }
 }
-
-const orc = {
-    label: "くさそうなオーク",
-    hp: 12,
-    damage: [6, 3, 2, 2]
-};
