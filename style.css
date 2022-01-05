@@ -12,3 +12,8 @@ textarea{
 a{
     font-family: sans-serif;
 }
+
+.flex-container{
+    display: flex;
+    flex-wrap: wrap;
+}

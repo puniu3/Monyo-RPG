@@ -6,12 +6,12 @@ export default function*(){
     while(true){
         let pl = {
             maxHp: level(xp) + 9,
-            hp: level(xp) + 9,
             blows: 2,
             attack: [1, 4],
             effects: gearEffects(equipment),
             skills:["なぐる", "かいふく", "いなずま", "ぼうぎょ"]
         };
+        pl.hp = maxHp(pl);
         
         let kills = 0;
         
@@ -34,9 +34,9 @@ export default function*(){
                     pl.effects.push({type: "spell", amount: -0.25, duration: 3},{type: "hp", amount: -0.04, duration: Infinity});
                     yield [`いたいのとんでけ！${rst}のたいりょくをかいふく！`, "つづける"];
                 }else if(act === "いなずま"){
-                    const dmg = round(5 * multiplier(pl.effects, "spell"));
+                    const dmg = round(6 * multiplier(pl.effects, "spell"));
                     enemy.hp -= dmg;
-                    pl.effects.push({type: "spell", amount: -0.25, duration: 3});
+                    pl.effects.push({type: "spell", amount: -0.25, duration: 4});
                     yield [`ニンポをつかうぞ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.name + "はうごかなくなった！"}`, "つづける"];
                 }else if(act === "ぼうぎょ"){
                     pl.effects.push({type: "dodge", amount: 0.5, duration: 2});

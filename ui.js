@@ -1,29 +1,26 @@
 import generateState from "./game.js";
 
 const tx = document.querySelector("textarea");
+const btns = document.querySelectorAll("button");
+btns.forEach((b, idx) => b.addEventListener("click", () => handleCmd(idx + 1)));
 
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", handleKeyup);
 
-document.querySelector("#btn1").addEventListener("click", () => handleCmd(1));
-document.querySelector("#btn2").addEventListener("click", () => handleCmd(2));
-document.querySelector("#btn3").addEventListener("click", () => handleCmd(3));
-document.querySelector("#btn4").addEventListener("click", () => handleCmd(4));
-
-let hold = [false, false, false, false, false];
+let hold = Array(10).fill(false);
 
 function handleKeydown(e){
-	if(e.code === "Digit1"){ if(!hold[1]) handleCmd(1); hold[1] = true; }
-	if(e.code === "Digit2"){ if(!hold[2]) handleCmd(2); hold[2] = true; }
-	if(e.code === "Digit3"){ if(!hold[3]) handleCmd(3); hold[3] = true; }
-	if(e.code === "Digit4"){ if(!hold[4]) handleCmd(4); hold[4] = true; }
+    if(!e.code.startsWith("Digit")) return;
+    
+    const n = parseInt(e.code[5]);
+    if(!hold[n]){
+        handleCmd(n);
+        hold[n] = true;
+    }
 }
 
 function handleKeyup(e){
-	if(e.code === "Digit1") hold[1] = false;
-	if(e.code === "Digit2") hold[2] = false;
-	if(e.code === "Digit3") hold[3] = false;
-	if(e.code === "Digit4") hold[4] = false;
+    if(e.code.startsWith("Digit")) hold[e.code[5]] = false;
 }
 
 function print(msg){
@@ -46,8 +43,5 @@ function handleCmd(n){
 	for(let i = 1; i < next.length; ++i)
 		println(i + ") " + next[i]);
 	
-	document.querySelector("#btn1").disabled = options < 1;
-	document.querySelector("#btn2").disabled = options < 2;
-	document.querySelector("#btn3").disabled = options < 3;
-	document.querySelector("#btn4").disabled = options < 4;
+    btns.forEach((b, idx) => b.hidden = options < idx + 1);
 }
