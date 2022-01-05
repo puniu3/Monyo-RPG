@@ -1,13 +1,15 @@
 export default function*(){
     let xp = 0;
+    let armory = ["plate", "robe"];
+    let equipment = ["leather"];
     
     while(true){
         let pl = {
-            maxHp: 10,
-            hp: 10,
+            maxHp: level(xp) + 9,
+            hp: level(xp) + 9,
             blows: 2,
             attack: [1, 4],
-            effects:[{type: "dodge", amount: 0.1, duration: Infinity}],
+            effects: gearEffects(equipment),
             skills:["なぐる", "かいふく", "いなずま", "ぼうぎょ"]
         };
         
@@ -29,11 +31,10 @@ export default function*(){
                 }else if(act === "かいふく"){
                     const rst = round(rnd(3, 8) * multiplier(pl.effects, "spell"));
                     pl.hp = Math.min(maxHp(pl), pl.hp + rst);
-                    pl.effects.push({type: "spell", amount: -0.25, duration: 3});
-                    pl.effects.push({type: "hp", amount: -0.04, duration: Infinity});
+                    pl.effects.push({type: "spell", amount: -0.25, duration: 3},{type: "hp", amount: -0.04, duration: Infinity});
                     yield [`いたいのとんでけ！${rst}のたいりょくをかいふく！`, "つづける"];
                 }else if(act === "いなずま"){
-                    const dmg = round(6 * multiplier(pl.effects, "spell"));
+                    const dmg = round(5 * multiplier(pl.effects, "spell"));
                     enemy.hp -= dmg;
                     pl.effects.push({type: "spell", amount: -0.25, duration: 3});
                     yield [`ニンポをつかうぞ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.name + "はうごかなくなった！"}`, "つづける"];
@@ -66,6 +67,16 @@ export default function*(){
         const xpGained = xpTable[kills] || xpTable[xpTable.length - 1];
         yield [`ぶじにかえってきた..\n${kills}たいのてきをたおし ${xpGained}のけいけんをえた${level(xp) < level(xp + xpGained) ? "\nレベルがあがった！" : ""}`, "つづける"];
         xp += xpGained;
+        
+        let cmd;
+        while(cmd !== 1){
+            cmd = yield [`レベル：${level(xp)}`, "もぐる", "そうび"];
+            
+            if(cmd === 2){
+                const eqp = yield [`どれをそうび？`, "E" + name2Desc(equipment[0]), ...armory.map(name2Desc)];
+                if(eqp !== 1){armory.push(equipment.pop()); equipment.push(...armory.splice(eqp - 2, 1));}
+            }
+        }
     }
 }
 
@@ -94,3 +105,20 @@ const orc = {
 const xpTable = [0, 1, 2, 4, 6, 10, 12, 14, 15];
 const lvTable = [0, 3, 10, 20, 38];
 const level = xp => lvTable.filter(req => req <= xp).length;
+
+const gears = [
+    {name: "leather", label: "かわよろい", effect: {type: "dodge", amount: 0.1}},
+    {name: "plate", label: "むねあて", effect: {type: "hp", amount: 0.2}},
+    {name: "robe", label: "ローブ", effect: {type: "spell", amount: 0.25}}
+];
+
+const gearEffect = name => ({...gears.find(g => g.name === name).effect, duration: Infinity});
+const gearEffects = names => names.map(gearEffect);
+
+const name2Label = name => gears.find(g => g.name === name).label;
+const name2Effect = name => {
+    const dict = new Map([["hp", "たいりょく"], ["dodge", "かいひ"], ["spell", "じゅついりょく"]]);
+    const e = gears.find(g => g.name === name).effect;
+    return dict.get(e.type) + (e.amount >= 0 ? "+" : "-") + (e.amount * 100) + "%";
+};
+const name2Desc = name => name2Label(name) + " " + name2Effect(name);
