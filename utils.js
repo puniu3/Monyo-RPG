@@ -1,5 +1,5 @@
 import gears from "./gears.js";
-export {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, name2Desc, wear, stats};
+export {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label};
 
 const round = n => Math.random() < (n - Math.floor(n)) ? Math.ceil(n) : Math.floor(n);
 const rnd = (min, max) => Math.floor(Math.random() * (max + 1 - min)) + min;
@@ -20,7 +20,9 @@ const lvTable = [0, 3, 10, 20, 38];
 const level = xp => lvTable.filter(req => req <= xp).length;
 
 const gearEffect = name => (gears.find(g => g.name === name).effects.map(e => ({...e, duration: Infinity})));
-const gearEffects = names => names.map(gearEffect).flat();
+const gearEffects = map => [...map.values()].map(gearEffect).flat();
+
+const gear = name => gears.find(g => g.name === name);
 
 const name2Label = name => gears.find(g => g.name === name).label;
 const name2Effect = name => {
@@ -33,3 +35,8 @@ const name2Desc = name => name2Label(name) + " " + name2Effect(name);
 const wear = effects => effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
 
 const stats = pl => `たいりょく：${pl.hp}/${maxHp(pl)}\nじゅついりょく：${multiplier(pl.effects, "spell") * 100}%`;
+
+const type2Label = type => {
+    const dict = new Map([["primary", "みぎて"], ["secondary", "ひだりて"], ["head", "あたま"], ["body", "からだ"], ["feet", "あし"]]);
+    return dict.get(type);
+}

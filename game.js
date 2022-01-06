@@ -1,10 +1,10 @@
-import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, name2Desc, wear, stats} from "./utils.js";
+import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label} from "./utils.js";
 import {orc} from "./creatures.js";
 
 export default function*(){
     let xp = 0;
-    let armory = ["plate", "robe"];
-    let equipment = ["leather"];
+    let armory = ["plate", "robe", "helm", "hat"];
+    let equipment = new Map([["body", "leather"]]);
     
     while(true){
         let pl = {
@@ -73,8 +73,20 @@ export default function*(){
             cmd = yield [`レベル：${level(xp)}`, "もぐる", "そうび"];
             
             if(cmd === 2){
-                const eqp = yield [`どれをそうび？`, "E" + name2Desc(equipment[0]), ...armory.map(name2Desc)];
-                if(eqp !== 1){armory.push(equipment.pop()); equipment.push(...armory.splice(eqp - 2, 1));}
+                for(let type of ["primary", "secondary", "head", "body", "feet"]){
+                    if(!equipment.has(type) && armory.every(g => gear(g).type !== type))
+                        continue;
+                    const options =  [...armory.filter(g => gear(g).type === type)];
+                    if(equipment.has(type)) options.unshift(equipment.get(type));
+                    const eqp = yield [type2Label(type) + "：", ...options.map((g, i) => (equipment.has(type) && i === 0 ? "E" : "") + name2Desc(g)), "そうびしない"];
+                    
+                    if(equipment.has(type)) armory.push(equipment.get(type));
+                    equipment.delete(type);
+                    if(eqp === options.length + 1) continue;
+                    equipment.set(type, options[eqp - 1]);
+                    const idx = armory.indexOf(options[eqp - 1]);
+                    armory.splice(idx, 1);
+                }
             }
         }
     }
