@@ -1,31 +1,68 @@
-import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg, loot} from "./utils.js";
+import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg, loot, tryPush} from "./utils.js";
 import {orc} from "./creatures.js";
 
 export default function*(){
     let day = 1;
     let xp = 0;
+    let gold = 0;
     let armory = [];
+    let stock = ["sword", "plate"];
     let equipment = new Map([["body", "leather"]]);
     
     while(true){
-        let cmd;
-        while(cmd !== 1){
-            cmd = yield [`${day}にちめ レベル：${level(xp)}`, "もぐる", "そうび"];
+        while(true){
+            const options = ["もぐる", "そうび", ...(day >= 3 ? ["おみせ"] : [])];
+            const cmd = yield [`${day}にちめ レベル${level(xp)} ${gold ? "$" + gold : ""}`, ...options];
             
+            if(cmd === 1) break;
             if(cmd === 2){
                 for(let type of ["primary", "secondary", "head", "body", "feet"]){
                     if(!equipment.has(type) && armory.every(g => gear(g).type !== type))
                         continue;
-                    const options =  [...armory.filter(g => gear(g).type === type)];
+                        
+                    const options = [...armory.filter(g => gear(g).type === type)];
                     if(equipment.has(type)) options.unshift(equipment.get(type));
                     const eqp = yield [type2Label(type) + "：", ...options.map((g, i) => (equipment.has(type) && i === 0 ? "E" : "") + name2Desc(g)), "そうびしない"];
                     
-                    if(equipment.has(type)) armory.push(equipment.get(type));
-                    equipment.delete(type);
-                    if(eqp === options.length + 1) continue;
-                    equipment.set(type, options[eqp - 1]);
-                    const idx = armory.indexOf(options[eqp - 1]);
-                    armory.splice(idx, 1);
+                    tryPush(armory, equipment.get(type));
+                    if(eqp === options.length + 1){
+                        equipment.delete(type);
+                    }else{
+                        equipment.set(type, options[eqp - 1]);
+                        armory.splice(armory.indexOf(options[eqp - 1]), 1);
+                    }
+                }
+            }
+            
+            if(cmd === 3){
+                while(true){
+                    const c = yield [`いらっしゃい`, "かう", "うる", "さよなら"]
+                    if(c === 3) break;
+                    if(c === 1){
+                        const d = yield [`どれをかう？ $${gold}`, "やめとく", ...stock.map(g => "$3 " + name2Desc(g))];
+                        if(d > 1){
+                            if(gold < 3) yield [`おかねがたりないよ`, "つづける"];
+                            else{
+                                gold -= 3;
+                                armory.push(stock[d - 2]);
+                                stock.splice(d - 2, 1);
+                                yield [`まいどあり`, "つづける"];
+                            }
+                        }
+                    }
+                    if(c === 2){
+                        const d = yield [`どれをうる？`, "やめとく", ...(armory.length ? ["ぜんぶ"] : []), ...armory.map(name2Desc)];
+                        if(d === 2){
+                            yield [`ぜんぶで$${armory.length}になった`, "つづける"]
+                            gold += armory.length;
+                            armory = [];
+                        }
+                        if(d > 2){
+                            yield [`$1でうれた`, "つづける"];
+                            ++gold;
+                            armory.splice(d - 2, 1);
+                        }
+                    }
                 }
             }
         }
@@ -78,7 +115,7 @@ export default function*(){
                 }
             }
             
-            if(pl.hp <= 0) return [`しんでしまった.. たおしたてき：${kills}`];
+            if(pl.hp <= 0) return [`しんでしまった..`];
             
             ++kills;        
             const cmd = yield ["たたかいはおわった！", "すすむ", "もどる"];

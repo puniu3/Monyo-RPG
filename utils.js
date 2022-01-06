@@ -1,5 +1,5 @@
 import gears from "./gears.js";
-export {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg, loot};
+export {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg, loot, tryPush};
 
 const round = n => Math.random() < (n - Math.floor(n)) ? Math.ceil(n) : Math.floor(n);
 const rnd = (min, max) => Math.floor(Math.random() * (max + 1 - min)) + min;
@@ -45,3 +45,5 @@ const type2Label = type => {
 }
 
 const loot = () => pickRnd(gears);
+
+const tryPush = (arr, item) => {if(item !== undefined) arr.push(item);}
