@@ -1,5 +1,5 @@
 import gears from "./gears.js";
-export {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg};
+export {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg, loot};
 
 const round = n => Math.random() < (n - Math.floor(n)) ? Math.ceil(n) : Math.floor(n);
 const rnd = (min, max) => Math.floor(Math.random() * (max + 1 - min)) + min;
@@ -37,9 +37,11 @@ const name2Desc = name => name2Label(name) + " " + name2Dmg(name) + name2Effect(
 
 const wear = effects => effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
 
-const stats = pl => `たいりょく：${pl.hp}/${maxHp(pl)}\nじゅついりょく：${multiplier(pl.effects, "spell") * 100}%`;
+const stats = pl => `たいりょく：${pl.hp}/${maxHp(pl)}\nじゅついりょく：${Math.round(multiplier(pl.effects, "spell") * 100)}%`;
 
 const type2Label = type => {
     const dict = new Map([["primary", "みぎて"], ["secondary", "ひだりて"], ["head", "あたま"], ["body", "からだ"], ["feet", "あし"]]);
     return dict.get(type);
 }
+
+const loot = () => pickRnd(gears);
