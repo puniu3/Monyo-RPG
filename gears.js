@@ -4,4 +4,5 @@ export default [
     {name: "robe", label: "ローブ", type: "body", effects: [{type: "spell", amount: 0.25}, {type: "hp", amount: -0.1}]},
     {name: "helm", label: "かぶと", type: "head", effects: [{type: "hp", amount: 0.1}]},
     {name: "hat", label: "とんがりぼうし", type: "head", effects: [{type: "spell", amount: 0.15}]},
+    {name: "sword", label: "けん", type: "primary", damage: [3, 6], effects:[]},
 ];

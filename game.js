@@ -1,15 +1,16 @@
-import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label} from "./utils.js";
+import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg} from "./utils.js";
 import {orc} from "./creatures.js";
 
 export default function*(){
     let xp = 0;
-    let armory = ["plate", "robe", "helm", "hat"];
+    let armory = ["plate", "robe", "helm", "hat", "sword"];
     let equipment = new Map([["body", "leather"]]);
     
     while(true){
         let pl = {
             maxHp: level(xp) + 9,
             effects: gearEffects(equipment),
+            damage: weaponDmg(equipment),
             skills:["なぐる", "かいふく", "いなずま", "ぼうぎょ"]
         };
         pl.hp = maxHp(pl);
@@ -26,7 +27,7 @@ export default function*(){
                 let cmd = yield [stats(pl) + `\nてき：${enemy.label}`, ...pl.skills];
                 const act = pl.skills[cmd - 1];
                 if(act === "なぐる"){
-                    const dmg = attack(1, 4, 2);
+                    const dmg = attack(...pl.damage, 2);
                     enemy.hp -= dmg;
                     yield [`ぽかっすかっ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
                 }else if(act === "かいふく"){
