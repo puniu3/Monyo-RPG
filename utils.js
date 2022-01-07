@@ -1,5 +1,5 @@
 import gears from "./gears.js";
-export {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg, loot, tryPush};
+export {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, describe, wear, stats, label, weaponDmg, loot, tryPush, player};
 
 const round = n => Math.random() < (n - Math.floor(n)) ? Math.ceil(n) : Math.floor(n);
 const rnd = (min, max) => Math.floor(Math.random() * (max + 1 - min)) + min;
@@ -33,13 +33,13 @@ const name2Effect = name => {
     return es.map(e => dict.get(e.type) + (e.amount >= 0 ? "+" : "") + (e.amount * 100) + "%").reduce((a, b) => a + " " + b, ""); 
 };
 const name2Dmg = name => gear(name).damage ? `こうげきりょく：${gear(name).damage[0]}-${gear(name).damage[1]}` : "";
-const name2Desc = name => name2Label(name) + " " + name2Dmg(name) + name2Effect(name);
+const describe = name => name2Label(name) + " " + name2Dmg(name) + name2Effect(name);
 
 const wear = effects => effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
 
 const stats = pl => `たいりょく：${pl.hp}/${maxHp(pl)}\nじゅついりょく：${Math.round(multiplier(pl.effects, "spell") * 100)}%`;
 
-const type2Label = type => {
+const label = type => {
     const dict = new Map([["primary", "みぎて"], ["secondary", "ひだりて"], ["head", "あたま"], ["body", "からだ"], ["feet", "あし"]]);
     return dict.get(type);
 }
@@ -47,3 +47,14 @@ const type2Label = type => {
 const loot = () => pickRnd(gears);
 
 const tryPush = (arr, item) => {if(item !== undefined) arr.push(item);}
+
+const player = (xp, equipment) =>{
+    const pl ={
+        maxHp: level(xp) + 9,
+        effects: gearEffects(equipment),
+        damage: weaponDmg(equipment),
+        skills:["なぐる", "かいふく", "いなずま", "ぼうぎょ"]
+    };
+        pl.hp = maxHp(pl);
+        return pl;
+}

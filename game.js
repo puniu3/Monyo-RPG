@@ -1,4 +1,4 @@
-import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, name2Desc, wear, stats, type2Label, weaponDmg, loot, tryPush} from "./utils.js";
+import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, describe, wear, stats, label, weaponDmg, loot, tryPush, player} from "./utils.js";
 import {orc} from "./creatures.js";
 
 export default function*(){
@@ -14,15 +14,12 @@ export default function*(){
             const options = ["もぐる", "そうび", ...(day >= 3 ? ["おみせ"] : [])];
             const cmd = yield [`${day}にちめ レベル${level(xp)} ${gold ? "$" + gold : ""}`, ...options];
             
-            if(cmd === 1) break;
-            if(cmd === 2){
-                for(let type of ["primary", "secondary", "head", "body", "feet"]){
-                    if(!equipment.has(type) && armory.every(g => gear(g).type !== type))
-                        continue;
+            if(cmd === 1) break; //expedition
+            if(cmd === 2){ //equip
+                for(let type of ["primary", "secondary", "head", "body", "feet"].filter(t => equipment.has(t) || armory.some(g => gear(g).type === t))){
                         
-                    const options = [...armory.filter(g => gear(g).type === type)];
-                    if(equipment.has(type)) options.unshift(equipment.get(type));
-                    const eqp = yield [type2Label(type) + "：", ...options.map((g, i) => (equipment.has(type) && i === 0 ? "E" : "") + name2Desc(g)), "そうびしない"];
+                    const options = [...(equipment.has(type) ? [equipment.get(type)] : []), ...armory.filter(g => gear(g).type === type)];
+                    const eqp = yield [label(type) + "：", ...options.map((g, i) => (equipment.has(type) && i === 0 ? "E" : "") + describe(g)), "そうびしない"];
                     
                     tryPush(armory, equipment.get(type));
                     if(eqp === options.length + 1){
@@ -34,24 +31,23 @@ export default function*(){
                 }
             }
             
-            if(cmd === 3){
+            if(cmd === 3){ //shop
                 while(true){
-                    const c = yield [`いらっしゃい`, "かう", "うる", "さよなら"]
+                    const c = yield [`いらっしゃい`, "かう", "うる", "さよなら"];
                     if(c === 3) break;
                     if(c === 1){
-                        const d = yield [`どれをかう？ $${gold}`, "やめとく", ...stock.map(g => "$3 " + name2Desc(g))];
+                        const d = yield [`どれをかう？ $${gold}`, "やめとく", ...stock.map(g => "$3 " + describe(g))];
                         if(d > 1){
                             if(gold < 3) yield [`おかねがたりないよ`, "つづける"];
                             else{
                                 gold -= 3;
-                                armory.push(stock[d - 2]);
-                                stock.splice(d - 2, 1);
+                                armory.push(...stock.splice(d - 2, 1));
                                 yield [`まいどあり`, "つづける"];
                             }
                         }
                     }
                     if(c === 2){
-                        const d = yield [`どれをうる？`, "やめとく", ...(armory.length ? ["ぜんぶ"] : []), ...armory.map(name2Desc)];
+                        const d = yield [`どれをうる？`, "やめとく", ...(armory.length ? ["ぜんぶ"] : []), ...armory.map(describe)];
                         if(d === 2){
                             yield [`ぜんぶで$${armory.length}になった`, "つづける"]
                             gold += armory.length;
@@ -67,14 +63,7 @@ export default function*(){
             }
         }
         
-        let pl = {
-            maxHp: level(xp) + 9,
-            effects: gearEffects(equipment),
-            damage: weaponDmg(equipment),
-            skills:["なぐる", "かいふく", "いなずま", "ぼうぎょ"]
-        };
-        pl.hp = maxHp(pl);
-        
+        let pl = player(xp, equipment);
         let kills = 0;
         
         while(true){
