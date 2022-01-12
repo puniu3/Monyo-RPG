@@ -9,5 +9,9 @@ export default [
     {name: "idol", label: "ひすいのぐうぞう", type: "secondary", effects:[], bolt:[{type: "sdamage", amount: 2}, {type: "dodge", amount: -0.25, duration: 3}]},
     {name: "thor", label: "トールハンマー", type: "primary", damage:[1, 15, 1], effects:[], bolt:[{type: "damage", amount: .5, duration: 2}]},
     {name: "goblet", label: "ちのさかずき", type: "secondary", effects:[], heal:[{type: "sdamage", amount: 2}]},
-    {name: "saint", label: "せいじゃのかんむり", type: "head", effects:[{type: "hp", amount: .1}], heal:[{type: "sheal", amount: 1}]}
+    {name: "saint", label: "せいじゃのかんむり", type: "head", effects:[{type: "hp", amount: .1}], heal:[{type: "sheal", amount: 1}]},
+    {name: "rod", label: "つえ", type: "primary", damage:[1, 3, 2], effects:[], attack:[{type: "spell", amount: .5, duration: 3}]},
+    {name: "ranger", label: "のぶせのくつ", type: "feet", effects:[{type: "dodge", amount: 0.1}], heal:[{type:"sheal", amount: -1}]},
+    {name: "talisman", label: "まよけ", type: "secondary", effects:[], parry:[{type:"spell", amount:.25, duration:3}]},
+    {name: "paladin", label:"せいきしのよろい", type:"body", effects:[{type:"hp", amount:.1}], heal:[{type:"dodge", amount:.5, duration:1}]},
 ];

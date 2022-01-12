@@ -32,7 +32,9 @@ const name2Dmg = name => gear(name).damage ? `こうげきりょく：${gear(nam
 const name2OnDodge = name => gear(name).dodge ? ` かいひじ：${gear(name).dodge.map(describeEffect)}` : "";
 const name2OnBolt = name => gear(name).bolt ? ` いなずま：${gear(name).bolt.map(describeEffect)}` : "";
 const name2OnHeal = name => gear(name).heal ? ` かいふく：${gear(name).heal.map(describeEffect)}` : "";
-const describe = name => label(name) + " " + name2Dmg(name) + name2Effect(name) + name2OnDodge(name) + name2OnBolt(name) + name2OnHeal(name);
+const name2OnAttack = name => gear(name).attack ? ` なぐる：${gear(name).attack.map(describeEffect)}` : "";
+const name2OnParry = name => gear(name).parry ? ` ぼうぎょ：${gear(name).parry.map(describeEffect)}` : "";
+const describe = name => label(name) + " " + name2Dmg(name) + name2Effect(name) + name2OnDodge(name) + name2OnBolt(name) + name2OnHeal(name) + name2OnAttack(name) + name2OnParry(name);
 
 const wear = effects => effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
 
@@ -58,8 +60,8 @@ const label = word => {
         ["dodge", "かいひ"],
         ["spell", "じゅついりょく"],
         ["damage", "こうげきりょく"],
-        ["sdamage", "ついかダメージ"],
-        ["sheal", "ついかかいふく"]]);
+        ["sdamage", "ダメージ"],
+        ["sheal", "かいふく"]]);
     return dict.get(word) || (gear(word) ? gear(word).label : "");
 }
 
@@ -75,6 +77,8 @@ const player = (xp, equipment) =>{
         onDodge: [...equipment.values()].map(gear).filter(e => e.dodge).map(e => e.dodge).flat(),
         onBolt: [...equipment.values()].map(gear).filter(e => e.bolt).map(e => e.bolt).flat(),
         onHeal: [...equipment.values()].map(gear).filter(e => e.heal).map(e => e.heal).flat(),
+        onAttack: [...equipment.values()].map(gear).filter(e => e.attack).map(e => e.attack).flat(),
+        onParry: [...equipment.values()].map(gear).filter(e => e.parry).map(e => e.parry).flat(),
     };
         pl.hp = maxHp(pl);
         return pl;

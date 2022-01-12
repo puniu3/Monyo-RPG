@@ -5,8 +5,8 @@ export default function*(){
     let day = 1;
     let xp = 0;
     let gold = 0;
-    let armory = ["thor", "goblet", "saint"];
-    let stock = ["sword", "plate"];
+    let armory = ["paladin"];
+    let stock = [];
     let equipment = new Map([["body", "leather"]]);
     
     while(true){
@@ -36,27 +36,27 @@ export default function*(){
                     const c = yield [`いらっしゃい`, "かう", "うる", "さよなら"];
                     if(c === 3) break;
                     if(c === 1){
-                        const d = yield [`どれをかう？ $${gold}`, "やめとく", ...stock.map(g => "$3 " + describe(g))];
-                        if(d > 1){
+                        const d = yield [`どれをかう？ $${gold}`, ...stock.map(g => "$3 " + describe(g)), "やめとく"];
+                        if(d <= stock.length){
                             if(gold < 3) yield [`おかねがたりないよ`, "つづける"];
                             else{
                                 gold -= 3;
-                                armory.push(...stock.splice(d - 2, 1));
+                                armory.push(...stock.splice(d - 1, 1));
                                 yield [`まいどあり`, "つづける"];
                             }
                         }
                     }
                     if(c === 2){
-                        const d = yield [`どれをうる？`, "やめとく", ...(armory.length ? ["ぜんぶ"] : []), ...armory.map(describe)];
-                        if(d === 2){
+                        const d = yield [`どれをうる？`, ...armory.map(describe), ...(armory.length > 1 ? ["ぜんぶ"] : []), "やめとく"];
+                        if(armory.length > 1 && d === armory.length + 1){
                             yield [`ぜんぶで$${armory.length}になった`, "つづける"]
                             gold += armory.length;
                             armory = [];
                         }
-                        if(d > 2){
+                        if(d <= armory.length){
                             yield [`$1でうれた`, "つづける"];
                             ++gold;
-                            armory.splice(d - 2, 1);
+                            armory.splice(d - 1, 1);
                         }
                     }
                 }
@@ -77,11 +77,14 @@ export default function*(){
                 if(cmd === 1){
                     const dmg = round(attack(...pl.damage) * multiplier(pl.effects, "damage"));
                     enemy.hp -= dmg;
+                    pl.effects.push(...pl.onAttack.filter(e => !["sdamage", "sheal"].includes(e.type)));
                     yield [`ぽかっすかっ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
                 }else if(cmd === 2){
                     const rst = round((rnd(3, 8) + sum(pl.onHeal, "sheal")) * multiplier(pl.effects, "spell"));
                     pl.hp = Math.min(maxHp(pl), pl.hp + rst);
                     pl.effects.push({type: "spell", amount: -0.25, duration: 3},{type: "hp", amount: -0.04, duration: Infinity});
+                    pl.effects.push(...pl.onHeal.filter(e => !["sdamage", "sheal"].includes(e.type)));
+
                     let msg = "";
 
                     const dmg = round(multiplier(pl.effects, "spell") * sum(pl.onHeal, "sdamage"));
@@ -99,6 +102,7 @@ export default function*(){
                     yield [`ニンポをつかうぞ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
                 }else if(cmd === 4){
                     pl.effects.push({type: "dodge", amount: 0.5, duration: 2});
+                    pl.effects.push(...pl.onParry.filter(e => !["sdamage", "sheal"].includes(e.type)));
                     yield ["みがまえて こうげきをかわしやすくなった！", "つづける"];
                 }
                 if(enemy.hp <= 0 || pl.hp <= 0) break;
@@ -132,5 +136,9 @@ export default function*(){
             armory.push(l.name);
             yield [`こんかいの ぶんどりひん：${l.label}`, "つづける"];
         }
+        
+        const merchandise = loot();
+        if(!stock.includes(merchandise.name))
+            stock.push(merchandise.name);
     }
 }
