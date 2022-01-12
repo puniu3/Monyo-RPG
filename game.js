@@ -5,7 +5,7 @@ export default function*(){
     let day = 1;
     let xp = 0;
     let gold = 0;
-    let armory = [];
+    let armory = ["rapier"];
     let stock = ["sword", "plate"];
     let equipment = new Map([["body", "leather"]]);
     
@@ -73,33 +73,33 @@ export default function*(){
             while(pl.hp > 0){
                 pl.effects = wear(pl.effects);
                 
-                let cmd = yield [stats(pl) + `\nてき：${enemy.label}`, ...pl.skills];
-                const act = pl.skills[cmd - 1];
-                if(act === "なぐる"){
-                    const dmg = attack(...pl.damage, 2);
+                let cmd = yield [stats(pl) + `\nてき：${enemy.label}`, "なぐる", "かいふく", "いなずま", "ぼうぎょ"];
+                if(cmd === 1){
+                    const dmg = round(attack(...pl.damage) * multiplier(pl.effects, "damage"));
                     enemy.hp -= dmg;
                     yield [`ぽかっすかっ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
-                }else if(act === "かいふく"){
+                }else if(cmd === 2){
                     const rst = round(rnd(3, 8) * multiplier(pl.effects, "spell"));
                     pl.hp = Math.min(maxHp(pl), pl.hp + rst);
                     pl.effects.push({type: "spell", amount: -0.25, duration: 3},{type: "hp", amount: -0.04, duration: Infinity});
                     yield [`いたいのとんでけ！${rst}のたいりょくをかいふく！`, "つづける"];
-                }else if(act === "いなずま"){
+                }else if(cmd === 3){
                     const dmg = round(6 * multiplier(pl.effects, "spell"));
                     enemy.hp -= dmg;
                     pl.effects.push({type: "spell", amount: -0.25, duration: 4});
                     yield [`ニンポをつかうぞ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
-                }else if(act === "ぼうぎょ"){
+                }else if(cmd === 4){
                     pl.effects.push({type: "dodge", amount: 0.5, duration: 2});
                     yield ["みがまえて こうげきをかわしやすくなった！", "つづける"];
                 }
                 if(enemy.hp <= 0 || pl.hp <= 0) break;
                 
-                if(Math.random() > sum(pl.effects, "dodge", 0.85)){
+                if(Math.random() > sum(pl.effects, "dodge", 0.75)){
                     const dmg = pickRnd(enemy.damage);
                     pl.hp -= dmg;
                     yield [`がすっ！${dmg}のダメージをうけた！${pl.hp > 0 ? "" : "やられてしまった！"}`, "つづける"];
                 }else{
+                    pl.effects.push(...pl.onDodge);
                     yield [`ひらり！こうげきをかわした！`, "つづける"];
                 }
             }

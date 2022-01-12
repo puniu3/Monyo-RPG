@@ -22,7 +22,7 @@ const level = xp => lvTable.filter(req => req <= xp).length;
 const gearEffect = name => (gears.find(g => g.name === name).effects.map(e => ({...e, duration: Infinity})));
 const gearEffects = map => [...map.values()].map(gearEffect).flat();
 
-const weaponDmg = map => map.has("primary") ? gear(map.get("primary")).damage : [1, 4];
+const weaponDmg = map => map.has("primary") ? gear(map.get("primary")).damage : [1, 4, 2];
 
 const gear = name => gears.find(g => g.name === name);
 
@@ -32,12 +32,21 @@ const name2Effect = name => {
     const es = gears.find(g => g.name === name).effects;
     return es.map(e => dict.get(e.type) + (e.amount >= 0 ? "+" : "") + (e.amount * 100) + "%").reduce((a, b) => a + " " + b, ""); 
 };
-const name2Dmg = name => gear(name).damage ? `こうげきりょく：${gear(name).damage[0]}-${gear(name).damage[1]}` : "";
+const name2Dmg = name => gear(name).damage ? `こうげきりょく：${gear(name).damage[0] * gear(name).damage[2]}-${gear(name).damage[1] * gear(name).damage[2]}` : "";
 const describe = name => name2Label(name) + " " + name2Dmg(name) + name2Effect(name);
 
 const wear = effects => effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
 
-const stats = pl => `たいりょく：${pl.hp}/${maxHp(pl)}\nじゅついりょく：${Math.round(multiplier(pl.effects, "spell") * 100)}%`;
+const stats = pl =>{
+    const hp = `たいりょく：${pl.hp}/${maxHp(pl)}`;
+    const s = multiplier(pl.effects, "spell");
+    const dm = multiplier(pl.effects, "damage");
+    const damage = dm === 1 ? "" : `\nこうげきりょく：${Math.round(dm * 100)}%`;
+    const spell = s === 1 ? "" : `\nじゅついりょく：${Math.round(s * 100)}%`;
+    const d = sum(pl.effects, "dodge");
+    const dodge = d === 0 ? "" : `\nかいひ：${Math.round(d * 100)}%`;
+    return hp + damage + spell + dodge;
+}
 
 const label = type => {
     const dict = new Map([["primary", "みぎて"], ["secondary", "ひだりて"], ["head", "あたま"], ["body", "からだ"], ["feet", "あし"]]);
@@ -53,7 +62,7 @@ const player = (xp, equipment) =>{
         maxHp: level(xp) + 9,
         effects: gearEffects(equipment),
         damage: weaponDmg(equipment),
-        skills:["なぐる", "かいふく", "いなずま", "ぼうぎょ"]
+        onDodge: [...equipment.values()].map(gear).filter(e => e.dodge).map(e => e.dodge).flat(),
     };
         pl.hp = maxHp(pl);
         return pl;
