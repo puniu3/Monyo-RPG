@@ -9,4 +9,5 @@ export default [
     {name: "idol", label: "ひすいのぐうぞう", type: "secondary", effects:[], bolt:[{type: "sdamage", amount: 2}, {type: "dodge", amount: -0.25, duration: 3}]},
     {name: "thor", label: "トールハンマー", type: "primary", damage:[1, 15, 1], effects:[], bolt:[{type: "damage", amount: .5, duration: 2}]},
     {name: "goblet", label: "ちのさかずき", type: "secondary", effects:[], heal:[{type: "sdamage", amount: 2}]},
+    {name: "saint", label: "せいじゃのかんむり", type: "head", effects:[{type: "hp", amount: .1}], heal:[{type: "sheal", amount: 1}]}
 ];

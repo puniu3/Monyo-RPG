@@ -5,7 +5,7 @@ export default function*(){
     let day = 1;
     let xp = 0;
     let gold = 0;
-    let armory = ["thor", "goblet"];
+    let armory = ["thor", "goblet", "saint"];
     let stock = ["sword", "plate"];
     let equipment = new Map([["body", "leather"]]);
     
@@ -79,7 +79,7 @@ export default function*(){
                     enemy.hp -= dmg;
                     yield [`ぽかっすかっ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
                 }else if(cmd === 2){
-                    const rst = round(rnd(3, 8) * multiplier(pl.effects, "spell"));
+                    const rst = round((rnd(3, 8) + sum(pl.onHeal, "sheal")) * multiplier(pl.effects, "spell"));
                     pl.hp = Math.min(maxHp(pl), pl.hp + rst);
                     pl.effects.push({type: "spell", amount: -0.25, duration: 3},{type: "hp", amount: -0.04, duration: Infinity});
                     let msg = "";
@@ -87,7 +87,8 @@ export default function*(){
                     const dmg = round(multiplier(pl.effects, "spell") * sum(pl.onHeal, "sdamage"));
                     if(dmg){
                         enemy.hp -= dmg;
-                        msg = `さらに${dmg}のダメージをあたえた！`;
+                        msg = `\nさらに${dmg}のダメージをあたえた！`;
+                        if(enemy.hp <= 0) msg += `${enemy.label}はしなびきった！`;
                     }
                     yield [`いたいのとんでけ！${rst}のたいりょくをかいふく！${msg}`, "つづける"];
                 }else if(cmd === 3){
