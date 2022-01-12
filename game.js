@@ -5,7 +5,7 @@ export default function*(){
     let day = 1;
     let xp = 0;
     let gold = 0;
-    let armory = ["rapier", "robe"];
+    let armory = ["thor", "goblet"];
     let stock = ["sword", "plate"];
     let equipment = new Map([["body", "leather"]]);
     
@@ -82,11 +82,19 @@ export default function*(){
                     const rst = round(rnd(3, 8) * multiplier(pl.effects, "spell"));
                     pl.hp = Math.min(maxHp(pl), pl.hp + rst);
                     pl.effects.push({type: "spell", amount: -0.25, duration: 3},{type: "hp", amount: -0.04, duration: Infinity});
-                    yield [`いたいのとんでけ！${rst}のたいりょくをかいふく！`, "つづける"];
+                    let msg = "";
+
+                    const dmg = round(multiplier(pl.effects, "spell") * sum(pl.onHeal, "sdamage"));
+                    if(dmg){
+                        enemy.hp -= dmg;
+                        msg = `さらに${dmg}のダメージをあたえた！`;
+                    }
+                    yield [`いたいのとんでけ！${rst}のたいりょくをかいふく！${msg}`, "つづける"];
                 }else if(cmd === 3){
-                    const dmg = round(6 * multiplier(pl.effects, "spell"));
+                    const dmg = round((6 + sum(pl.onBolt, "sdamage")) * multiplier(pl.effects, "spell"));
                     enemy.hp -= dmg;
                     pl.effects.push({type: "spell", amount: -0.25, duration: 4});
+                    pl.effects.push(...pl.onBolt.filter(e => !["sdamage", "sheal"].includes(e.type)));
                     yield [`ニンポをつかうぞ！${dmg}のダメージ！${enemy.hp > 0 ? "" : enemy.label + "はうごかなくなった！"}`, "つづける"];
                 }else if(cmd === 4){
                     pl.effects.push({type: "dodge", amount: 0.5, duration: 2});

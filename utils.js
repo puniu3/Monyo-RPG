@@ -26,11 +26,13 @@ const weaponDmg = map => map.has("primary") ? gear(map.get("primary")).damage : 
 
 const gear = name => gears.find(g => g.name === name);
 
-const describeEffect = e => label(e.type) + (e.amount >= 0 ? "+" : "") + (e.amount * 100) + "%" + (e.duration ? `(${e.duration}ターン)` : "");
+const describeEffect = e => label(e.type) + (e.amount >= 0 ? "+" : "") + `${["sdamage", "sheal"].includes(e.type) ? e.amount : (e.amount * 100 + "%")}` + (e.duration ? `(${e.duration}ターン)` : "");
 const name2Effect = name => gear(name).effects.map(describeEffect).reduce((a, b) => a + " " + b, "");
 const name2Dmg = name => gear(name).damage ? `こうげきりょく：${gear(name).damage[0] * gear(name).damage[2]}-${gear(name).damage[1] * gear(name).damage[2]}` : "";
 const name2OnDodge = name => gear(name).dodge ? ` かいひじ：${gear(name).dodge.map(describeEffect)}` : "";
-const describe = name => label(name) + " " + name2Dmg(name) + name2Effect(name) + name2OnDodge(name);
+const name2OnBolt = name => gear(name).bolt ? `いなずま：${gear(name).bolt.map(describeEffect)}` : "";
+const name2OnHeal = name => gear(name).heal ? `かいふく：${gear(name).heal.map(describeEffect)}` : "";
+const describe = name => label(name) + " " + name2Dmg(name) + name2Effect(name) + name2OnDodge(name) + name2OnBolt(name) + name2OnHeal(name);
 
 const wear = effects => effects.map(e => ({...e, duration: e.duration - 1})).filter(({duration}) => duration > 0);
 
@@ -55,7 +57,8 @@ const label = word => {
         ["hp", "たいりょく"],
         ["dodge", "かいひ"],
         ["spell", "じゅついりょく"],
-        ["damage", "こうげきりょく"]]);
+        ["damage", "こうげきりょく"],
+        ["sdamage", "ついかダメージ"]]);
     return dict.get(word) || (gear(word) ? gear(word).label : "");
 }
 
@@ -69,6 +72,8 @@ const player = (xp, equipment) =>{
         effects: gearEffects(equipment),
         damage: weaponDmg(equipment),
         onDodge: [...equipment.values()].map(gear).filter(e => e.dodge).map(e => e.dodge).flat(),
+        onBolt: [...equipment.values()].map(gear).filter(e => e.bolt).map(e => e.bolt).flat(),
+        onHeal: [...equipment.values()].map(gear).filter(e => e.heal).map(e => e.heal).flat(),
     };
         pl.hp = maxHp(pl);
         return pl;
