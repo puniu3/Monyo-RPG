@@ -5,7 +5,7 @@ export default function*(){
     let day = 1;
     let xp = 0;
     let gold = 0;
-    let armory = ["rapier"];
+    let armory = ["rapier", "robe"];
     let stock = ["sword", "plate"];
     let equipment = new Map([["body", "leather"]]);
     
