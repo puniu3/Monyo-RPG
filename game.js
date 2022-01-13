@@ -5,7 +5,7 @@ export default function*(){
     let day = 1;
     let xp = 0;
     let gold = 0;
-    let armory = ["goblet"];
+    let armory = [];
     let stock = [];
     let equipment = new Map([["body", "leather"]]);
     
@@ -36,27 +36,29 @@ export default function*(){
                     const c = yield [`いらっしゃい`, "かう", "うる", "さよなら"];
                     if(c === 3) break;
                     if(c === 1){
-                        const d = yield [`どれをかう？ $${gold}`, ...stock.map(g => "$3 " + describe(g)), "やめとく"];
+                        const d = yield [`どれをかう？ $${gold}`, ...stock.map(g => `$${gear(g).value} ` + describe(g)), "やめとく"];
                         if(d <= stock.length){
-                            if(gold < 3) yield [`おかねがたりないよ`, "つづける"];
+                            if(gold < gear(stock[d - 1]).value) yield [`おかねがたりないよ`, "つづける"];
                             else{
-                                gold -= 3;
+                                gold -= gear(stock[d - 1]).value;
                                 armory.push(...stock.splice(d - 1, 1));
                                 yield [`まいどあり`, "つづける"];
                             }
                         }
                     }
                     if(c === 2){
-                        const d = yield [`どれをうる？`, ...armory.map(describe), ...(armory.length > 1 ? ["ぜんぶ"] : []), "やめとく"];
+                        const d = yield [`どれをうる？`, ...armory.map(g =>`$${gear(g).value / 2 | 0} ${describe(g)}`), ...(armory.length > 1 ? ["ぜんぶ"] : []), "やめとく"];
                         if(armory.length > 1 && d === armory.length + 1){
-                            yield [`ぜんぶで$${armory.length}になった`, "つづける"]
-                            gold += armory.length;
+                            const gain = stock.map(gear).map(g => g.value / 2 | 0);
+                            gold += gain;
                             armory = [];
+                            yield [`ぜんぶで$${gain}になった`, "つづける"]
                         }
                         if(d <= armory.length){
-                            yield [`$1でうれた`, "つづける"];
-                            ++gold;
+                            const gain = gear(stock[d - 1]).value / 2 | 0;
+                            gold += gain;
                             armory.splice(d - 1, 1);
+                            yield [`$${gain}でうれた`, "つづける"];
                         }
                     }
                 }
