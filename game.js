@@ -1,11 +1,11 @@
-import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, xpTable, level, gearEffects, gear, describe, wear, stats, label, weaponDmg, loot, tryPush, player} from "./utils.js";
+import {round, rnd, attack, pickRnd, sum, multiplier, maxHp, level, gearEffects, gear, describe, wear, stats, label, weaponDmg, loot, tryPush, player} from "./utils.js";
 import {orc} from "./creatures.js";
 
 export default function*(){
     let day = 1;
     let xp = 0;
     let gold = 0;
-    let armory = ["paladin"];
+    let armory = ["goblet"];
     let stock = [];
     let equipment = new Map([["body", "leather"]]);
     
@@ -82,17 +82,16 @@ export default function*(){
                 }else if(cmd === 2){
                     const rst = round((rnd(3, 8) + sum(pl.onHeal, "sheal")) * multiplier(pl.effects, "spell"));
                     pl.hp = Math.min(maxHp(pl), pl.hp + rst);
+                    
+                    const dmg = round(multiplier(pl.effects, "spell") * sum(pl.onHeal, "sdamage"));
+                    enemy.hp -= dmg;
+                    
                     pl.effects.push({type: "spell", amount: -0.25, duration: 3},{type: "hp", amount: -0.04, duration: Infinity});
                     pl.effects.push(...pl.onHeal.filter(e => !["sdamage", "sheal"].includes(e.type)));
 
-                    let msg = "";
+                    let msg = dmg ? `\nさらに${dmg}のダメージをあたえた！` : "";
+                    if(enemy.hp <= 0) msg += `${enemy.label}はしなびきった！`;
 
-                    const dmg = round(multiplier(pl.effects, "spell") * sum(pl.onHeal, "sdamage"));
-                    if(dmg){
-                        enemy.hp -= dmg;
-                        msg = `\nさらに${dmg}のダメージをあたえた！`;
-                        if(enemy.hp <= 0) msg += `${enemy.label}はしなびきった！`;
-                    }
                     yield [`いたいのとんでけ！${rst}のたいりょくをかいふく！${msg}`, "つづける"];
                 }else if(cmd === 3){
                     const dmg = round((6 + sum(pl.onBolt, "sdamage")) * multiplier(pl.effects, "spell"));
@@ -127,7 +126,7 @@ export default function*(){
             pl.effects = wear(pl.effects);
         }
         
-        const xpGained = xpTable[kills] || xpTable[xpTable.length - 1];
+        const xpGained = kills;
         yield [`ぶじにかえってきた..\n${kills}たいのてきをたおし ${xpGained}のけいけんをえた${level(xp) < level(xp + xpGained) ? "\nレベルがあがった！" : ""}`, "つづける"];
         xp += xpGained;
         ++day;
@@ -140,5 +139,6 @@ export default function*(){
         const merchandise = loot();
         if(!stock.includes(merchandise.name))
             stock.push(merchandise.name);
+        stock = stock.slice(-3);
     }
 }
