@@ -49,7 +49,7 @@ export default function*(){
                     if(c === 2){
                         const d = yield [`どれをうる？`, ...armory.map(g =>`$${gear(g).value / 2 | 0} ${describe(g)}`), ...(armory.length > 1 ? ["ぜんぶ"] : []), "やめとく"];
                         if(armory.length > 1 && d === armory.length + 1){
-                            const gain = stock.map(gear).map(g => g.value / 2 | 0);
+                            const gain = stock.map(gear).map(g => g.value / 2 | 0).reduce((a, b) => a + b);
                             gold += gain;
                             armory = [];
                             yield [`ぜんぶで$${gain}になった`, "つづける"]
@@ -138,9 +138,9 @@ export default function*(){
             yield [`こんかいの ぶんどりひん：${l.label}`, "つづける"];
         }
         
-        const merchandise = loot();
-        if(!stock.includes(merchandise.name))
-            stock.push(merchandise.name);
+        const m = loot();
+        if(!stock.includes(m.name) && !armory.includes(m.name) && ![...equipment.values()].includes(m.name))
+            stock.push(m.name);
         stock = stock.slice(-3);
     }
 }
